@@ -2,7 +2,7 @@
 
 #include <cnoid/Plugin>
 
-// #include "HwmClockItem.h"
+#include "ClockPublisherItem.h"
 // #include "HwmPosePublisherItem.h"
 
 namespace CnoidRosUtils
@@ -14,7 +14,7 @@ public:
 
   virtual bool initialize() override
   {
-    // ClockItem::initialize(this);
+    ClockPublisherItem::initialize(this);
     // PosePublisherItem::initialize(this);
     return true;
   }
