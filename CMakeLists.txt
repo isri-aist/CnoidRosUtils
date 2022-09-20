@@ -43,10 +43,9 @@ catkin_package(
   visualization_msgs
   sensor_msgs
   DEPENDS EIGEN3
-  INCLUDE_DIRS include
   )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 link_directories(${catkin_LIBRARY_DIRS})
 
-# add_subdirectory(src)
+add_subdirectory(plugin)
