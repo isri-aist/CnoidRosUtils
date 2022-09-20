@@ -2,7 +2,7 @@ add_library(CnoidRosUtilsPlugin
   SHARED
   Plugin.cpp
   ClockPublisherItem.cpp
-  # PosePublisherItem.cpp
+  PosePublisherItem.cpp
   )
 target_include_directories(CnoidRosUtilsPlugin PUBLIC
   ${CNOID_INCLUDE_DIRS}
