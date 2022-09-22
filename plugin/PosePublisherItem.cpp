@@ -1,10 +1,15 @@
 /* Author: Masaki Murooka */
 
 #include <cnoid/BodyItem>
+#include <cnoid/DyBody>
 #include <cnoid/ItemManager>
 #include <cnoid/MessageView>
 #include <cnoid/PutPropertyFunction>
 #include <cnoid/RootItem>
+
+#include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <geometry_msgs/TwistStamped.h>
 
 #include "PosePublisherItem.h"
 
@@ -56,6 +61,7 @@ void PosePublisherItem::doPutProperties(cnoid::PutPropertyFunction & putProperty
   putProperty("Link name", link_name_, cnoid::changeProperty(link_name_));
   putProperty("Frame id", frame_id_, cnoid::changeProperty(frame_id_));
   putProperty("Pose topic name (only for topic output)", pose_topic_name_, cnoid::changeProperty(pose_topic_name_));
+  putProperty("Velocity topic name (only for topic output)", vel_topic_name_, cnoid::changeProperty(vel_topic_name_));
   putProperty("TF frame id (only for TF output)", tf_child_frame_id_, cnoid::changeProperty(tf_child_frame_id_));
   putProperty("Publish rate", pub_rate_, [&](const double & pub_rate) {
     pub_rate_ = std::min(std::max(pub_rate, 1e-1), 1e3);
@@ -73,6 +79,7 @@ bool PosePublisherItem::store(cnoid::Archive & archive)
   archive.write("Link name", link_name_);
   archive.write("Frame id", frame_id_);
   archive.write("Pose topic name (only for topic output)", pose_topic_name_);
+  archive.write("Velocity topic name (only for topic output)", vel_topic_name_);
   archive.write("TF frame id (only for TF output)", tf_child_frame_id_);
   archive.write("Publish rate", pub_rate_);
   archive.write("Output TF", output_tf_);
@@ -85,6 +92,7 @@ bool PosePublisherItem::restore(const cnoid::Archive & archive)
   archive.read("Link name", link_name_);
   archive.read("Frame id", frame_id_);
   archive.read("Pose topic name (only for topic output)", pose_topic_name_);
+  archive.read("Velocity topic name (only for topic output)", vel_topic_name_);
   archive.read("TF frame id (only for TF output)", tf_child_frame_id_);
   archive.read("Publish rate", pub_rate_);
   archive.read("Output TF", output_tf_);
@@ -140,6 +148,10 @@ bool PosePublisherItem::start()
   {
     pose_topic_name_ = "cnoid/" + body_item_->name() + "/pose";
   }
+  if(vel_topic_name_.empty())
+  {
+    vel_topic_name_ = "cnoid/" + body_item_->name() + "/vel";
+  }
   if(frame_id_.empty())
   {
     frame_id_ = "robot_map";
@@ -149,6 +161,7 @@ bool PosePublisherItem::start()
     tf_child_frame_id_ = link_name_;
   }
   pose_pub_ = nh_->advertise<geometry_msgs::PoseStamped>(pose_topic_name_, 1);
+  vel_pub_ = nh_->advertise<geometry_msgs::TwistStamped>(vel_topic_name_, 1);
   pub_skip_ = getPubSkip();
 
   // Add postDynamicsFunction
@@ -175,15 +188,23 @@ void PosePublisherItem::onPostDynamics()
     return;
   }
 
+  // Get SimulationBody
+  cnoid::SimulationBody * sim_body = sim_->findSimulationBody(body_item_);
+  if(!sim_body)
+  {
+    cnoid::MessageView::instance()->putln("[PosePublisherItem] SimulationBody not found", cnoid::MessageView::ERROR);
+    return;
+  }
+
   // Get Link
-  cnoid::Link * link = nullptr;
+  cnoid::DyLink * link = nullptr;
   if(link_name_.empty())
   {
-    link = body_item_->body()->rootLink();
+    link = static_cast<cnoid::DyBody *>(sim_body->body())->rootLink();
   }
   else
   {
-    link = body_item_->body()->link(link_name_);
+    link = static_cast<cnoid::DyBody *>(sim_body->body())->link(link_name_);
   }
   if(!link)
   {
@@ -192,47 +213,41 @@ void PosePublisherItem::onPostDynamics()
     return;
   }
 
-  // Publish a message
+  // Publish message
+  ros::Time stamp_now = ros::Time::now();
   // You need to use Ta() instead of T() to get correct rotation
   // ref: https://github.com/s-nakaoka/choreonoid/commit/cefcfce0caddf94d9eef9c75277fc78e9fbd53b6
   cnoid::Position pose = link->Ta();
-
-  ros::Time stamp_now = ros::Time::now();
   if(output_tf_)
   {
-    broadcastPose(pose, tf_child_frame_id_, stamp_now);
+    if(!tf_br_)
+    {
+      tf_br_ = std::make_shared<tf2_ros::TransformBroadcaster>();
+    }
+    geometry_msgs::TransformStamped msg;
+    msg.header.stamp = stamp_now;
+    msg.header.frame_id = frame_id_;
+    msg.child_frame_id = tf_child_frame_id_;
+    tf::vectorEigenToMsg(pose.translation(), msg.transform.translation);
+    tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), msg.transform.rotation);
+    tf_br_->sendTransform(msg);
   }
   else
   {
-    publishPose(pose, pose_pub_, stamp_now);
-  }
-}
+    geometry_msgs::PoseStamped pose_msg;
+    pose_msg.header.stamp = stamp_now;
+    pose_msg.header.frame_id = frame_id_;
+    tf::pointEigenToMsg(pose.translation(), pose_msg.pose.position);
+    tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), pose_msg.pose.orientation);
+    pose_pub_.publish(pose_msg);
 
-void PosePublisherItem::broadcastPose(const cnoid::Position & pose,
-                                      const std::string & child_frame_id,
-                                      const ros::Time & stamp)
-{
-  if(!tf_br_)
-  {
-    tf_br_ = std::make_shared<tf2_ros::TransformBroadcaster>();
+    geometry_msgs::TwistStamped vel_msg;
+    vel_msg.header.stamp = stamp_now;
+    vel_msg.header.frame_id = frame_id_;
+    tf::vectorEigenToMsg(link->v(), vel_msg.twist.linear);
+    tf::vectorEigenToMsg(link->w(), vel_msg.twist.angular);
+    vel_pub_.publish(vel_msg);
   }
-  geometry_msgs::TransformStamped msg;
-  msg.header.stamp = stamp;
-  msg.header.frame_id = frame_id_;
-  msg.child_frame_id = child_frame_id;
-  tf::vectorEigenToMsg(pose.translation(), msg.transform.translation);
-  tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), msg.transform.rotation);
-  tf_br_->sendTransform(msg);
-}
-
-void PosePublisherItem::publishPose(const cnoid::Position & pose, ros::Publisher & pub, const ros::Time & stamp)
-{
-  geometry_msgs::PoseStamped msg;
-  msg.header.stamp = stamp;
-  msg.header.frame_id = frame_id_;
-  tf::pointEigenToMsg(pose.translation(), msg.pose.position);
-  tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), msg.pose.orientation);
-  pub.publish(msg);
 }
 
 int PosePublisherItem::getPubSkip() const
