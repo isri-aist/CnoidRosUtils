@@ -89,7 +89,7 @@ void ClockPublisherItem::setup()
   world_ = this->findOwnerItem<cnoid::WorldItem>();
   if(!world_)
   {
-    cnoid::MessageView::instance()->putln("[ClockPublisherItem] WorldItem not found", cnoid::MessageView::ERROR);
+    // cnoid::MessageView::instance()->putln("[ClockPublisherItem] WorldItem not found", cnoid::MessageView::ERROR);
     return;
   }
 

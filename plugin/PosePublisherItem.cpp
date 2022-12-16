@@ -106,7 +106,7 @@ void PosePublisherItem::setup()
   world_ = this->findOwnerItem<cnoid::WorldItem>();
   if(!world_)
   {
-    cnoid::MessageView::instance()->putln("[PosePublisherItem] WorldItem not found", cnoid::MessageView::ERROR);
+    // cnoid::MessageView::instance()->putln("[PosePublisherItem] WorldItem not found", cnoid::MessageView::ERROR);
     return;
   }
 
