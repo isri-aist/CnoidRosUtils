@@ -13,6 +13,20 @@
 
 namespace CnoidRosUtils
 {
+/** Plugin item to publish topics and broadcast TF of pose and velocity of the model.
+
+    Properties
+     - `Link name`: target link name (root link if empty)
+     - `Frame id`: frame id in the header of topic or TF
+     - `Pose topic name (only for topic output)`: pose topic name (`cnoid/<body-name>/pose` if empty) [used only when
+   `Output TF` is false]
+     - `Velocity topic name (only for topic output)`: velocity topic name (`cnoid/<body-name>/vel` if empty) [used only
+   when `Output TF` is false]
+     - `TF frame id (only for TF output)`: child frame id of TF (`<link-name>` if empty) [used only when `Output TF` is
+   true]
+     - `Publish rate`: rate of publish and broadcast
+     - `Output TF`: if true, broadcast TF, if false, publish topics
+*/
 class PosePublisherItem : public cnoid::Item
 {
 public:

@@ -12,6 +12,13 @@
 
 namespace CnoidRosUtils
 {
+/** Plugin item to publish clock topic.
+
+    Properties
+     - `Clock topic name`: clock topic name (`/clock` if empty)
+     - `Publish rate`: rate of publish
+     - `Set use_sim_time`: boolean value to set for ROS parameter `/use_sim_time`
+*/
 class ClockPublisherItem : public cnoid::Item
 {
 public:
