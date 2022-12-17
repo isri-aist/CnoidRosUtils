@@ -48,3 +48,8 @@ catkin_package(
 link_directories(${catkin_LIBRARY_DIRS})
 
 add_subdirectory(plugin)
+
+OPTION(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
+if(INSTALL_DOCUMENTATION)
+  add_subdirectory(doc)
+endif()
