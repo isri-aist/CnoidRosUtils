@@ -31,6 +31,10 @@ jobs:
       matrix:
         os: [ubuntu-20.04, ubuntu-18.04]
         build-type: [RelWithDebInfo, Debug]
+        mc-rtc-version: [head, stable]
+        exclude:
+          - build-type: Debug
+            mc-rtc-version: stable
     runs-on: ${{ matrix.os }}
     steps:
       - name: Set ROS version
@@ -92,7 +96,7 @@ jobs:
           catkin build cnoid_ros_utils --limit-status-rate 0.1 -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} -DINSTALL_DOCUMENTATION=ON
       - name: Upload documentation
         # Only run for one configuration and on master branch
-        if: matrix.os == 'ubuntu-20.04' && matrix.build-type == 'RelWithDebInfo' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'ubuntu-20.04' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
         run: |
           set -e
           set -x
