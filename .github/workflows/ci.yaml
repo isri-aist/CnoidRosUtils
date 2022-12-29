@@ -29,7 +29,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-18.04]
+        # Skip ubuntu-18.04 due to the issue in https://github.com/isri-aist/CnoidRosUtils/issues/1#issuecomment-1367072885
+        os: [ubuntu-20.04] # [ubuntu-20.04, ubuntu-18.04]
         build-type: [RelWithDebInfo, Debug]
         mc-rtc-version: [head, stable]
         exclude:
@@ -59,7 +60,7 @@ jobs:
           set -e
           set -x
           curl -1sLf 'https://dl.cloudsmith.io/public/mc-rtc/${{ matrix.mc-rtc-version }}/setup.deb.sh' | sudo -E bash
-          sudo apt install -y -qq choreonoid libcnoid-dev
+          sudo apt-get install -y -qq choreonoid libcnoid-dev
       - name: Setup catkin workspace
         run: |
           mkdir -p ${GITHUB_WORKSPACE}/catkin_ws/src/
