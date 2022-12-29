@@ -13,7 +13,7 @@
 
 namespace CnoidRosUtils
 {
-/** Plugin item to publish topics and broadcast TF of pose and velocity of the model.
+/** \brief Plugin item to publish topics and broadcast TF of pose and velocity of the model.
 
     Properties
      - `Link name`: target link name (root link if empty)

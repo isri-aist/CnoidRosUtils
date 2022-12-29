@@ -12,7 +12,7 @@
 
 namespace CnoidRosUtils
 {
-/** Plugin item to publish clock topic.
+/** \brief Plugin item to publish clock topic.
 
     Properties
      - `Clock topic name`: clock topic name (`/clock` if empty)

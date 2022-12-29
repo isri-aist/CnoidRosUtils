@@ -13,4 +13,4 @@ ROS-based Choreonoid utilities
 
 ### Dependencies
 This package depends on
-- [Choreonoid (isri-aist/choreonoid repository)](https://github.com/isri-aist/choreonoid)
+- [Choreonoid](https://github.com/choreonoid/choreonoid)
