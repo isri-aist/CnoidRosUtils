@@ -14,3 +14,10 @@ ROS-based Choreonoid utilities
 ### Dependencies
 This package depends on
 - [Choreonoid](https://github.com/choreonoid/choreonoid)
+
+## Plugin list
+##### [CnoidRosUtils::ClockPublisherItem](https://isri-aist.github.io/CnoidRosUtils/doxygen/classCnoidRosUtils_1_1ClockPublisherItem.html#details)
+Plugin item to publish clock topic.
+
+##### [CnoidRosUtils::PosePublisherItem](https://isri-aist.github.io/CnoidRosUtils/doxygen/classCnoidRosUtils_1_1PosePublisherItem.html#details)
+Plugin item to publish topics and broadcast TF of pose and velocity of the model.
