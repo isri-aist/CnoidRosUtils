@@ -1,10 +1,12 @@
+link_directories(${CNOID_LIBRARY_DIRS})
+
 add_library(CnoidRosUtilsPlugin
   SHARED
   Plugin.cpp
   ClockPublisherItem.cpp
   PosePublisherItem.cpp
   )
-target_link_libraries(CnoidRosUtilsPlugin PUBLIC ROSDependencies PkgConfig::CNOID)
+target_link_libraries(CnoidRosUtilsPlugin PUBLIC ROSDependencies PkgConfig::CNOID CnoidBodyPlugin)
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
   set(CNOID_PLUGIN_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/plugin/lib)
