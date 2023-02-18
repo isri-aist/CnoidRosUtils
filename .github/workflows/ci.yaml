@@ -49,10 +49,10 @@ jobs:
         if: matrix.catkin-build == 'standalone'
         uses: jrl-umi3218/github-actions/build-cmake-project@master
         with:
-          build-type: matrix.build-type
+          build-type: ${{ matrix.build-type }}
       - name: Upload documentation
         # Only run for one configuration and on master branch
-        if: matrix.os == 'ubuntu-20.04' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master' && matrix.catkin-build == 'catkin'
+        if: matrix.os == 'ubuntu-20.04' && matrix.catkin-build == 'catkin' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
         run: |
           set -e
           set -x
