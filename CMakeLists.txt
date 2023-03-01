@@ -1,6 +1,6 @@
 # 3.6 required for using IMPORTED_TARGET with pkg-config module
 cmake_minimum_required(VERSION 3.6)
-project(cnoid_ros_utils)
+project(cnoid_ros_utils VERSION 0.1.0)
 
 # If CMAKE_CXX_STANDARD is not specified, the features specified in target_compile_features or INTERFACE_COMPILE_FEATURES
 # may cause -std=gnu++11 to be added to the compile options and overwrite the C++ version specified in add_compile_options.
@@ -75,6 +75,15 @@ else()
 endif()
 
 add_subdirectory(plugin)
+
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+configure_package_config_file(cmake/CnoidRosUtilsConfig.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfig.cmake INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils/)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion ARCH_INDEPENDENT)
+install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfig.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfigVersion.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils
+)
 
 OPTION(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 if(INSTALL_DOCUMENTATION)
