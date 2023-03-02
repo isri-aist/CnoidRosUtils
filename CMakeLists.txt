@@ -2,6 +2,8 @@
 cmake_minimum_required(VERSION 3.6)
 project(cnoid_ros_utils VERSION 0.1.0)
 
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # If CMAKE_CXX_STANDARD is not specified, the features specified in target_compile_features or INTERFACE_COMPILE_FEATURES
 # may cause -std=gnu++11 to be added to the compile options and overwrite the C++ version specified in add_compile_options.
 set(CMAKE_CXX_STANDARD 17)
