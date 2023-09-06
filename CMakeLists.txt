@@ -27,14 +27,9 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 # choreonoid
-find_package(PkgConfig)
-pkg_check_modules(CNOID REQUIRED choreonoid IMPORTED_TARGET)
-execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=plugindir choreonoid
-  OUTPUT_VARIABLE CNOID_PLUGIN_SUBDIR
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=sharedir choreonoid
-  OUTPUT_VARIABLE CNOID_SHARE_SUBDIR
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+find_package(choreonoid REQUIRED)
+set(CNOID_PLUGIN_SUBDIR "${CHOREONOID_PLUGIN_DIR}")
+set(CNOID_SHARE_SUBDIR "${CHOREONOID_SHARE_DIR}")
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
   catkin_package(
@@ -54,6 +49,7 @@ if(DEFINED CATKIN_DEVEL_PREFIX)
   target_include_directories(ROSDependencies INTERFACE ${catkin_INCLUDE_DIRS})
   target_link_libraries(ROSDependencies INTERFACE ${catkin_LIBRARIES})
 else()
+  find_package(PkgConfig)
   add_library(ROSDependencies INTERFACE)
   function(add_ros_dependency NAME)
     pkg_check_modules(${NAME} REQUIRED ${NAME} IMPORTED_TARGET)
