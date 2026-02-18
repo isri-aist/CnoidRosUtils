@@ -15,10 +15,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
-        catkin-build: [catkin, standalone]
+        os: [ubuntu-22.04]
+        catkin-build: [colcon, standalone]
         build-type: [RelWithDebInfo, Debug]
-        mc-rtc-version: [head, stable]
+        mc-rtc-version: [head]
         exclude:
           - build-type: Debug
             mc-rtc-version: stable
@@ -36,12 +36,12 @@ jobs:
             apt: ros-base mc-rtc-plugin eigen-conversions
       - name: Checkout repository code
         if: matrix.catkin-build == 'standalone'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Catkin build
-        if: matrix.catkin-build == 'catkin'
-        uses: jrl-umi3218/github-actions/build-catkin-project@master
+      - name: Colcon build
+        if: matrix.catkin-build == 'colcon'
+        uses: jrl-umi3218/github-actions/build-colcon-project@master
         with:
           build-type: ${{ matrix.build-type }}
           cmake-args: -DINSTALL_DOCUMENTATION=ON
@@ -52,7 +52,7 @@ jobs:
           build-type: ${{ matrix.build-type }}
       - name: Upload documentation
         # Only run for one configuration and on master branch
-        if: matrix.os == 'ubuntu-20.04' && matrix.catkin-build == 'catkin' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'ubuntu-22.04' && matrix.catkin-build == 'colcon' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
         run: |
           set -e
           set -x
@@ -64,7 +64,7 @@ jobs:
           git clean -dfx
           git checkout --quiet gh-pages
           rm -rf doxygen/
-          cp -r ${GITHUB_WORKSPACE}/catkin_ws/build/cnoid_ros_utils/doc/html/ doxygen
+          cp -r ${GITHUB_WORKSPACE}/colcon_ws/build/cnoid_ros_utils/doc/html/ doxygen
           git add doxygen
           git_status=`git status -s`
           if test -n "$git_status"; then

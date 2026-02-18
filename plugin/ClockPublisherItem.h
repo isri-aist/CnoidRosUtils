@@ -7,8 +7,9 @@
 #include <cnoid/SimulatorItem>
 #include <cnoid/WorldItem>
 
-#include <ros/ros.h>
-#include <rosgraph_msgs/Clock.h>
+#include <rosgraph_msgs/msg/clock.hpp>
+#include <rosgraph_msgs/msg/detail/clock__struct.hpp>
+#include <rclcpp/rclcpp.hpp>
 
 namespace CnoidRosUtils
 {
@@ -60,10 +61,10 @@ protected:
 
   int post_dynamics_func_id_ = -1;
 
-  std::shared_ptr<ros::NodeHandle> nh_;
+  rclcpp::Node::SharedPtr nh_;
   std::string clock_topic_name_ = "";
   double pub_rate_ = 1000.0;
-  ros::Publisher clock_pub_;
+  rclcpp::Publisher<rosgraph_msgs::msg::Clock>::SharedPtr clock_pub_;
   bool use_sim_time_ = true;
 
   int sim_cnt_ = 0;

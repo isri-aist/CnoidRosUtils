@@ -7,9 +7,10 @@
 #include <cnoid/SimulatorItem>
 #include <cnoid/WorldItem>
 
-#include <ros/ros.h>
+#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <tf2_eigen/tf2_eigen.hpp>
 #include <tf2_ros/transform_broadcaster.h>
-#include <eigen_conversions/eigen_msg.h>
+#include <rclcpp/rclcpp.hpp>
 
 namespace CnoidRosUtils
 {
@@ -74,14 +75,14 @@ protected:
 
   bool output_tf_ = false;
 
-  std::shared_ptr<ros::NodeHandle> nh_;
+  rclcpp::Node::SharedPtr nh_;
   std::string frame_id_ = "";
   std::string pose_topic_name_ = "";
   std::string vel_topic_name_ = "";
   std::string tf_child_frame_id_ = "";
   double pub_rate_ = 30.0;
-  ros::Publisher pose_pub_;
-  ros::Publisher vel_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
+  rclcpp::Publisher<geometry_msgs::msg::TwistStamped>::SharedPtr vel_pub_;
   std::shared_ptr<tf2_ros::TransformBroadcaster> tf_br_;
 
   int sim_cnt_ = 0;

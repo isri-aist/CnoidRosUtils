@@ -1,28 +1,34 @@
-<package format="2">
+<?xml version="1.0"?>
+<package format="3">
   <name>cnoid_ros_utils</name>
   <version>0.1.0</version>
   <description>
-    ROS-based Choreonoid utilities
+    ROS 2–based Choreonoid utilities
   </description>
+
   <maintainer email="m-murooka@aist.go.jp">Masaki Murooka</maintainer>
-  <license>BSD</license>
+  <license>BSD-3-Clause</license>
 
-  <url>http://ros.org/wiki/cnoid_ros_utils</url>
-  <author>Masaki Murooka</author>
-
-  <buildtool_depend>catkin</buildtool_depend>
+  <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>choreonoid</depend>
-  <depend>roscpp</depend>
+
+  <depend>rclcpp</depend>
   <depend>tf2_ros</depend>
   <depend>eigen_conversions</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
+  <depend>tf2_eigen</depend>
   <depend>geometry_msgs</depend>
   <depend>visualization_msgs</depend>
   <depend>sensor_msgs</depend>
 
-  <build_depend>eigen</build_depend>
+  <build_depend>eigen3_cmake_module</build_depend>
+  <depend>Eigen3</depend>
 
   <doc_depend>doxygen</doc_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
 </package>

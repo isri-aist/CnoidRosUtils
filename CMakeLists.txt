@@ -4,22 +4,24 @@ project(cnoid_ros_utils VERSION 0.1.0)
 
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-# If CMAKE_CXX_STANDARD is not specified, the features specified in target_compile_features or INTERFACE_COMPILE_FEATURES
-# may cause -std=gnu++11 to be added to the compile options and overwrite the C++ version specified in add_compile_options.
+# If CMAKE_CXX_STANDARD is not specified, the features specified in
+# target_compile_features or INTERFACE_COMPILE_FEATURES may cause -std=gnu++11
+# to be added to the compile options and overwrite the C++ version specified in
+# add_compile_options.
 set(CMAKE_CXX_STANDARD 17)
 add_compile_options(-std=c++17)
 
 if(DEFINED CATKIN_DEVEL_PREFIX)
-  find_package(catkin REQUIRED COMPONENTS
-    roscpp
-    tf2_ros
-    eigen_conversions
-    std_msgs
-    std_srvs
-    geometry_msgs
-    visualization_msgs
-    sensor_msgs
-  )
+  find_package(
+    catkin REQUIRED
+    COMPONENTS roscpp
+               tf2_ros
+               eigen_conversions
+               std_msgs
+               std_srvs
+               geometry_msgs
+               visualization_msgs
+               sensor_msgs)
 endif()
 
 # Eigen
@@ -31,59 +33,58 @@ find_package(choreonoid REQUIRED)
 set(CNOID_PLUGIN_SUBDIR "${CHOREONOID_PLUGIN_DIR}")
 set(CNOID_SHARE_SUBDIR "${CHOREONOID_SHARE_DIR}")
 
-if(DEFINED CATKIN_DEVEL_PREFIX)
-  catkin_package(
-    CATKIN_DEPENDS
-    roscpp
-    tf2_ros
-    eigen_conversions
-    std_msgs
-    std_srvs
-    geometry_msgs
-    visualization_msgs
-    sensor_msgs
-    DEPENDS EIGEN3
-    )
-  link_directories(${catkin_LIBRARY_DIRS})
-  add_library(ROSDependencies INTERFACE)
-  target_include_directories(ROSDependencies INTERFACE ${catkin_INCLUDE_DIRS})
-  target_link_libraries(ROSDependencies INTERFACE ${catkin_LIBRARIES})
-else()
-  find_package(PkgConfig)
-  add_library(ROSDependencies INTERFACE)
-  function(add_ros_dependency NAME)
-    pkg_check_modules(${NAME} REQUIRED ${NAME} IMPORTED_TARGET)
-    target_link_libraries(ROSDependencies INTERFACE PkgConfig::${NAME})
-  endfunction()
-  function(add_ros_dependencies)
-    foreach(NAME ${ARGN})
-      add_ros_dependency(${NAME})
-    endforeach()
-  endfunction()
-  add_ros_dependencies(
-    roscpp
-    tf2_ros
-    eigen_conversions
-    std_msgs
-    std_srvs
-    geometry_msgs
-    visualization_msgs
-    sensor_msgs
-  )
-endif()
+find_package(rclcpp REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(std_srvs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(visualization_msgs REQUIRED)
+find_package(sensor_msgs REQUIRED)
+
+add_library(ROSDependencies INTERFACE)
+
+ament_target_dependencies(
+  ROSDependencies
+  INTERFACE
+  rclcpp
+  tf2_ros
+  tf2_eigen
+  std_msgs
+  std_srvs
+  geometry_msgs
+  visualization_msgs
+  sensor_msgs)
 
 add_subdirectory(plugin)
 
 include(CMakePackageConfigHelpers)
 include(GNUInstallDirs)
-configure_package_config_file(cmake/CnoidRosUtilsConfig.in.cmake ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfig.cmake INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils/)
-write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfigVersion.cmake VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion ARCH_INDEPENDENT)
+configure_package_config_file(
+  cmake/CnoidRosUtilsConfig.in.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfig.cmake
+  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils/)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion ARCH_INDEPENDENT)
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfig.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/cmake/CnoidRosUtilsConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils
-)
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/CnoidRosUtils)
 
-OPTION(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
+option(INSTALL_DOCUMENTATION "Generate and install the documentation" OFF)
 if(INSTALL_DOCUMENTATION)
   add_subdirectory(doc)
 endif()
+
+ament_export_dependencies(
+  rclcpp
+  tf2_ros
+  tf2_eigen
+  std_msgs
+  std_srvs
+  geometry_msgs
+  visualization_msgs
+  sensor_msgs)
+
+ament_package()

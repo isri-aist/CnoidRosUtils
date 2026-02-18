@@ -7,9 +7,9 @@
 #include <cnoid/PutPropertyFunction>
 #include <cnoid/RootItem>
 
-#include <geometry_msgs/PoseStamped.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <geometry_msgs/TwistStamped.h>
+#include <geometry_msgs/msg/pose_stamped.hpp>
+#include <geometry_msgs/msg/transform_stamped.hpp>
+#include <geometry_msgs/msg/twist_stamped.hpp>
 
 #include "PosePublisherItem.h"
 
@@ -19,9 +19,9 @@ void PosePublisherItem::initialize(cnoid::ExtensionManager * ext)
 {
   int argc = 0;
   char ** argv;
-  if(!ros::isInitialized())
+  if(!rclcpp::ok())
   {
-    ros::init(argc, argv, "choreonoid_ros");
+    rclcpp::init(argc, argv);
   }
 
   if(!initialized_)
@@ -34,12 +34,12 @@ void PosePublisherItem::initialize(cnoid::ExtensionManager * ext)
 
 PosePublisherItem::PosePublisherItem()
 {
-  cnoid::RootItem::instance()->sigTreeChanged().connect(boost::bind(&PosePublisherItem::setup, this));
+  cnoid::RootItem::instance()->sigSubTreeChanged().connect(std::bind(&PosePublisherItem::setup, this));
 }
 
 PosePublisherItem::PosePublisherItem(const PosePublisherItem & org) : Item(org)
 {
-  cnoid::RootItem::instance()->sigTreeChanged().connect(boost::bind(&PosePublisherItem::setup, this));
+  cnoid::RootItem::instance()->sigSubTreeChanged().connect(std::bind(&PosePublisherItem::setup, this));
   hooked_sims_.clear();
   post_dynamics_func_id_ = -1;
   sim_cnt_ = 0;
@@ -63,14 +63,16 @@ void PosePublisherItem::doPutProperties(cnoid::PutPropertyFunction & putProperty
   putProperty("Pose topic name (only for topic output)", pose_topic_name_, cnoid::changeProperty(pose_topic_name_));
   putProperty("Velocity topic name (only for topic output)", vel_topic_name_, cnoid::changeProperty(vel_topic_name_));
   putProperty("TF frame id (only for TF output)", tf_child_frame_id_, cnoid::changeProperty(tf_child_frame_id_));
-  putProperty("Publish rate", pub_rate_, [&](const double & pub_rate) {
-    pub_rate_ = std::min(std::max(pub_rate, 1e-1), 1e3);
-    if(sim_)
-    {
-      pub_skip_ = getPubSkip();
-    }
-    return true;
-  });
+  putProperty("Publish rate", pub_rate_,
+              [&](const double & pub_rate)
+              {
+                pub_rate_ = std::min(std::max(pub_rate, 1e-1), 1e3);
+                if(sim_)
+                {
+                  pub_skip_ = getPubSkip();
+                }
+                return true;
+              });
   putProperty("Output TF", output_tf_, cnoid::changeProperty(output_tf_));
 }
 
@@ -142,7 +144,7 @@ bool PosePublisherItem::start()
   }
 
   // Setup ROS
-  nh_ = std::make_shared<ros::NodeHandle>();
+  nh_ = rclcpp::Node::make_shared("CnoidROSPlugin::PosePublisher");
 
   if(pose_topic_name_.empty())
   {
@@ -160,8 +162,8 @@ bool PosePublisherItem::start()
   {
     tf_child_frame_id_ = link_name_;
   }
-  pose_pub_ = nh_->advertise<geometry_msgs::PoseStamped>(pose_topic_name_, 1);
-  vel_pub_ = nh_->advertise<geometry_msgs::TwistStamped>(vel_topic_name_, 1);
+  pose_pub_ = nh_->create_publisher<geometry_msgs::msg::PoseStamped>(pose_topic_name_, 1);
+  vel_pub_ = nh_->create_publisher<geometry_msgs::msg::TwistStamped>(vel_topic_name_, 1);
   pub_skip_ = getPubSkip();
 
   // Add postDynamicsFunction
@@ -214,39 +216,43 @@ void PosePublisherItem::onPostDynamics()
   }
 
   // Publish message
-  ros::Time stamp_now = ros::Time::now();
+  rclcpp::Time stamp_now = nh_->now();
+
   // You need to use Ta() instead of T() to get correct rotation
   // ref: https://github.com/s-nakaoka/choreonoid/commit/cefcfce0caddf94d9eef9c75277fc78e9fbd53b6
-  cnoid::Position pose = link->Ta();
+  cnoid::Isometry3 pose = link->T();
+
   if(output_tf_)
   {
     if(!tf_br_)
     {
-      tf_br_ = std::make_shared<tf2_ros::TransformBroadcaster>();
+      tf_br_ = std::make_shared<tf2_ros::TransformBroadcaster>(nh_);
     }
-    geometry_msgs::TransformStamped msg;
+
+    geometry_msgs::msg::TransformStamped msg;
     msg.header.stamp = stamp_now;
     msg.header.frame_id = frame_id_;
     msg.child_frame_id = tf_child_frame_id_;
-    tf::vectorEigenToMsg(pose.translation(), msg.transform.translation);
-    tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), msg.transform.rotation);
+    tf2::toMsg(pose.translation(), msg.transform.translation);
+    msg.transform.rotation = tf2::toMsg(Eigen::Quaterniond(pose.rotation()));
+
     tf_br_->sendTransform(msg);
   }
   else
   {
-    geometry_msgs::PoseStamped pose_msg;
+    geometry_msgs::msg::PoseStamped pose_msg;
     pose_msg.header.stamp = stamp_now;
     pose_msg.header.frame_id = frame_id_;
-    tf::pointEigenToMsg(pose.translation(), pose_msg.pose.position);
-    tf::quaternionEigenToMsg(Eigen::Quaterniond(pose.rotation()), pose_msg.pose.orientation);
-    pose_pub_.publish(pose_msg);
+    pose_msg.pose = tf2::toMsg(pose);
+    pose_pub_->publish(pose_msg);
 
-    geometry_msgs::TwistStamped vel_msg;
+    geometry_msgs::msg::TwistStamped vel_msg;
     vel_msg.header.stamp = stamp_now;
     vel_msg.header.frame_id = frame_id_;
-    tf::vectorEigenToMsg(link->v(), vel_msg.twist.linear);
-    tf::vectorEigenToMsg(link->w(), vel_msg.twist.angular);
-    vel_pub_.publish(vel_msg);
+    tf2::toMsg(link->v(), vel_msg.twist.linear);
+    tf2::toMsg(link->w(), vel_msg.twist.angular);
+
+    vel_pub_->publish(vel_msg);
   }
 }
 

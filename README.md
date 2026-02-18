@@ -9,7 +9,7 @@ ROS-based Choreonoid utilities
 
 ### Requirements
 - Compiler supporting C++17
-- Tested with `Ubuntu 20.04 / ROS Noetic` and `Ubuntu 18.04 / ROS Melodic`
+- Tested with `Ubuntu 22.04 / ROS Humble`
 
 ### Dependencies
 This package depends on
