@@ -19,9 +19,6 @@ jobs:
         catkin-build: [colcon, standalone]
         build-type: [RelWithDebInfo, Debug]
         mc-rtc-version: [head]
-        exclude:
-          - build-type: Debug
-            mc-rtc-version: stable
     runs-on: ${{ matrix.os }}
     steps:
       - name: Install dependencies
