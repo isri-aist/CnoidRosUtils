@@ -21,6 +21,10 @@ jobs:
         mc-rtc-version: [head]
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Install openrtm2
+        shell: bash
+        run: |
+          bash <(curl -s https://raw.githubusercontent.com/OpenRTM/OpenRTM-aist/master/scripts/openrtm2_install_ubuntu.sh)
       - name: Install dependencies
         uses: jrl-umi3218/github-actions/install-dependencies@master
         with:
