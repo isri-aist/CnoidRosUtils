@@ -1,3 +1,5 @@
+**This is the branch for ROS2; use [the ros1 branch](https://github.com/isri-aist/CnoidRosUtils/tree/ros1) for ROS1.**
+
 # [CnoidRosUtils](https://github.com/isri-aist/CnoidRosUtils)
 ROS-based Choreonoid utilities
 
