@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-22.04]
-        catkin-build: [colcon, standalone]
+        catkin-build: [standalone]
         build-type: [RelWithDebInfo, Debug]
         mc-rtc-version: [head]
     runs-on: ${{ matrix.os }}
@@ -40,24 +40,19 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: Colcon build
-        if: matrix.catkin-build == 'colcon'
-        uses: jrl-umi3218/github-actions/build-colcon-project@master
-        with:
-          build-type: ${{ matrix.build-type }}
-          cmake-args: -DINSTALL_DOCUMENTATION=ON
       - name: Standalone build
         if: matrix.catkin-build == 'standalone'
         uses: jrl-umi3218/github-actions/build-cmake-project@master
         with:
           build-type: ${{ matrix.build-type }}
+          options: -DINSTALL_DOCUMENTATION=ON
       - name: Upload documentation
         # Only run for one configuration and on master branch
-        if: matrix.os == 'ubuntu-22.04' && matrix.catkin-build == 'colcon' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
+        if: matrix.os == 'ubuntu-22.04' && matrix.build-type == 'RelWithDebInfo' && matrix.mc-rtc-version == 'head' && github.repository_owner == 'isri-aist' && github.ref == 'refs/heads/master'
         run: |
           set -e
           set -x
-          cd ${GITHUB_WORKSPACE}/catkin_ws/src/isri-aist/CnoidRosUtils
+          cd ${GITHUB_WORKSPACE}/CnoidRosUtils
           git config --global user.name "Masaki Murooka"
           git config --global user.email "m-murooka@aist.go.jp"
           git remote set-url origin "https://mmurooka:${{ secrets.CI_TOKEN }}@github.com/isri-aist/CnoidRosUtils"
@@ -65,7 +60,7 @@ jobs:
           git clean -dfx
           git checkout --quiet gh-pages
           rm -rf doxygen/
-          cp -r ${GITHUB_WORKSPACE}/colcon_ws/build/cnoid_ros_utils/doc/html/ doxygen
+          cp -r ${GITHUB_WORKSPACE}/CnoidRosUtils/build/doc/html/ doxygen
           git add doxygen
           git_status=`git status -s`
           if test -n "$git_status"; then
