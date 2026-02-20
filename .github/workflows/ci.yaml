@@ -34,7 +34,7 @@ jobs:
                 cloudsmith: mc-rtc/${{ matrix.mc-rtc-version }}
             apt: libmc-rtc-dev doxygen graphviz choreonoid libcnoid-dev
           ros: |
-            apt: ros-base mc-rtc-plugin eigen-conversions
+            apt: ros-base mc-rtc-plugin
       - name: Checkout repository code
         if: matrix.catkin-build == 'standalone'
         uses: actions/checkout@v4
