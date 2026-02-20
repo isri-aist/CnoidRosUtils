@@ -14,9 +14,9 @@ void ClockPublisherItem::initialize(cnoid::ExtensionManager * ext)
 {
   int argc = 0;
   char ** argv;
-  if(!ros::isInitialized())
+  if(!rclcpp::ok())
   {
-    ros::init(argc, argv, "choreonoid_ros");
+    rclcpp::init(argc, argv);
   }
 
   if(!initialized_)
@@ -29,12 +29,12 @@ void ClockPublisherItem::initialize(cnoid::ExtensionManager * ext)
 
 ClockPublisherItem::ClockPublisherItem()
 {
-  cnoid::RootItem::instance()->sigTreeChanged().connect(boost::bind(&ClockPublisherItem::setup, this));
+  cnoid::RootItem::instance()->sigSubTreeChanged().connect(std::bind(&ClockPublisherItem::setup, this));
 }
 
 ClockPublisherItem::ClockPublisherItem(const ClockPublisherItem & org) : cnoid::Item(org)
 {
-  cnoid::RootItem::instance()->sigTreeChanged().connect(boost::bind(&ClockPublisherItem::setup, this));
+  cnoid::RootItem::instance()->sigSubTreeChanged().connect(std::bind(&ClockPublisherItem::setup, this));
   hooked_sims_.clear();
   post_dynamics_func_id_ = -1;
   sim_cnt_ = 0;
@@ -54,14 +54,16 @@ void ClockPublisherItem::doPutProperties(cnoid::PutPropertyFunction & putPropert
 {
   cnoid::Item::doPutProperties(putProperty);
   putProperty("Clock topic name", clock_topic_name_, cnoid::changeProperty(clock_topic_name_));
-  putProperty("Publish rate", pub_rate_, [&](const double & pub_rate) {
-    pub_rate_ = std::min(std::max(pub_rate, 1e-1), 1e3);
-    if(sim_)
-    {
-      pub_skip_ = getPubSkip();
-    }
-    return true;
-  });
+  putProperty("Publish rate", pub_rate_,
+              [&](const double & pub_rate)
+              {
+                pub_rate_ = std::min(std::max(pub_rate, 1e-1), 1e3);
+                if(sim_)
+                {
+                  pub_skip_ = getPubSkip();
+                }
+                return true;
+              });
   putProperty("Set use_sim_time", use_sim_time_, cnoid::changeProperty(use_sim_time_));
 }
 
@@ -117,16 +119,17 @@ bool ClockPublisherItem::start()
   }
 
   // Setup ROS
-  nh_ = std::make_shared<ros::NodeHandle>();
+  nh_ = rclcpp::Node::make_shared("CnoidPlugin::ClockPublisher");
 
   if(clock_topic_name_.empty())
   {
     clock_topic_name_ = "/clock";
   }
-  clock_pub_ = nh_->advertise<rosgraph_msgs::Clock>(clock_topic_name_, 1);
+  clock_pub_ = nh_->create_publisher<rosgraph_msgs::msg::Clock>(clock_topic_name_, 1);
   pub_skip_ = getPubSkip();
 
-  nh_->setParam("/use_sim_time", use_sim_time_);
+  nh_->declare_parameter<bool>("use_sim_time", use_sim_time_);
+  nh_->set_parameter(rclcpp::Parameter("use_sim_time", use_sim_time_));
 
   // Add postDynamicsFunction
   post_dynamics_func_id_ = sim_->addPostDynamicsFunction(std::bind(&ClockPublisherItem::onPostDynamics, this));
@@ -153,9 +156,10 @@ void ClockPublisherItem::onPostDynamics()
   }
 
   // Publish a message
-  rosgraph_msgs::Clock msg;
-  msg.clock.fromSec(sim_->currentTime());
-  clock_pub_.publish(msg);
+  rosgraph_msgs::msg::Clock msg;
+  msg.clock = rclcpp::Time(static_cast<int64_t>(sim_->currentTime() * 1e9));
+
+  clock_pub_->publish(msg);
 }
 
 int ClockPublisherItem::getPubSkip() const

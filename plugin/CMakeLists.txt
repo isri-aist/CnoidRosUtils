@@ -1,20 +1,11 @@
-add_library(CnoidRosUtilsPlugin
-  SHARED
-  Plugin.cpp
-  ClockPublisherItem.cpp
-  PosePublisherItem.cpp
-  )
-target_link_libraries(CnoidRosUtilsPlugin PUBLIC ROSDependencies Choreonoid::CnoidBodyPlugin)
+add_library(CnoidRosUtilsPlugin SHARED Plugin.cpp ClockPublisherItem.cpp
+                                       PosePublisherItem.cpp)
 
-if(DEFINED CATKIN_DEVEL_PREFIX)
-  set(CNOID_PLUGIN_OUTPUT_DIR ${PROJECT_SOURCE_DIR}/plugin/lib)
-  set_target_properties(CnoidRosUtilsPlugin PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CNOID_PLUGIN_OUTPUT_DIR}
-    )
-  catkin_add_env_hooks(99.cnoid_ros_utils
-    SHELLS sh
-    DIRECTORY ${PROJECT_SOURCE_DIR}/env-hooks
-    )
-endif()
+target_link_libraries(CnoidRosUtilsPlugin PUBLIC ROSDependencies
+                                                 Choreonoid::CnoidBodyPlugin)
 
 install(TARGETS CnoidRosUtilsPlugin DESTINATION ${CNOID_PLUGIN_SUBDIR})
+
+configure_file("${PROJECT_SOURCE_DIR}/env-hooks/99.cnoid_ros_utils.sh.in"
+               ${PROJECT_BINARY_DIR}/env-hooks/99.cnoid_ros_utils.sh @ONLY)
+ament_environment_hooks("${PROJECT_BINARY_DIR}/env-hooks/99.cnoid_ros_utils.sh")

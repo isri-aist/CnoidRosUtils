@@ -7,3 +7,6 @@ GSYMS
 GTAGS
 
 plugin/lib
+build
+.cache
+.vscode
