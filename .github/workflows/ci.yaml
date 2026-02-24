@@ -57,10 +57,13 @@ jobs:
           git config --global user.email "m-murooka@aist.go.jp"
           git remote set-url origin "https://mmurooka:${{ secrets.CI_TOKEN }}@github.com/isri-aist/CnoidRosUtils"
           git fetch --depth=1 origin gh-pages:gh-pages
+          cp -r build/doc/html /tmp/doxygen_html
           git clean -dfx
           git checkout --quiet gh-pages
-          rm -rf doxygen/
-          cp -r ${GITHUB_WORKSPACE}/doc/html/ doxygen
+          rm -rf doxygen
+          mkdir -p doxygen
+          cp -r /tmp/doxygen_html/* doxygen/
+
           git add doxygen
           git_status=`git status -s`
           if test -n "$git_status"; then
